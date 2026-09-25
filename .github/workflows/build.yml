@@ -131,16 +131,27 @@ jobs:
           done
 
           if [ ! -z "$packages" ]; then
+            # 1. Use a proper bash array to collect directories safely
             shopt -s nullglob
-            ALL_DIRS="packages/* root-packages/* x11-packages/*"
+            ALL_DIRS=()
+            
+            # Only add default termux directories if they actually exist
+            for dir in packages root-packages x11-packages; do
+              if [ -d "$dir" ]; then
+                ALL_DIRS+=($dir/*)
+              fi
+            done
+            
+            # Add your custom gpkg directories
             for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
               if [ -d "$repo_path" ]; then
-                ALL_DIRS="$ALL_DIRS $repo_path"/*
+                ALL_DIRS+=($repo_path/*)
               fi
             done
             shopt -u nullglob
             
-            SORTED_ALL=$(./scripts/buildorder.py $ALL_DIRS)
+            # 2. Pass the safely expanded array to buildorder.py
+            SORTED_ALL=$(./scripts/buildorder.py "${ALL_DIRS[@]}")
             
             SORTED_PACKAGES=""
             for p in $SORTED_ALL; do
@@ -148,20 +159,17 @@ jobs:
               for target in $packages; do
                 target_name=$(basename "$target")
                 if [ "$p_name" = "$target_name" ]; then
-                  # Keep the original path (e.g., gpkg/bash) for the builder
                   SORTED_PACKAGES="$SORTED_PACKAGES $target"
                   break
                 fi
               done
             done
             
-            # Trim whitespace and assign
             packages=$(echo $SORTED_PACKAGES | xargs)
             echo "Optimized build order: $packages"
 
-            # SAFETY NET: If sorting stripped out all packages, fail loudly!
             if [ -z "$packages" ]; then
-              echo "::error::Package list became empty after dependency sorting! Check your package names."
+              echo "::error::Package list became empty after dependency sorting!"
               exit 1
             fi
 
@@ -178,7 +186,6 @@ jobs:
           else
             echo "No packages found to build in initial pass."
           fi
-
 
       - name: Create Pacman Index
         if: always()
