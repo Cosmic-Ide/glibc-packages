@@ -131,9 +131,32 @@ jobs:
           done
 
           if [ ! -z "$packages" ]; then
+            # 1. Topological sort is strictly required so dependencies (ncurses) build before targets (bash)
+            shopt -s nullglob
+            ALL_DIRS=""
+            for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
+              if [ -d "$repo_path" ]; then
+                ALL_DIRS="$ALL_DIRS $repo_path"/*
+              fi
+            done
+            shopt -u nullglob
+            
+            SORTED_ALL=$(./scripts/buildorder.py $ALL_DIRS)
+            
+            SORTED_PACKAGES=""
+            for p in $SORTED_ALL; do
+              for target in $packages; do
+                if [ "$p" = "$target" ]; then
+                  SORTED_PACKAGES="$SORTED_PACKAGES $p"
+                  break
+                fi
+              done
+            done
+            packages="$SORTED_PACKAGES"
+            echo "Optimized build order: $packages"
+
             pkg_names=$(for p in $packages; do basename "$p"; done | tr '\n' ' ')
 
-            # Use -f -s to FORCE build outputs locally without rebuilding dependency trees
             if grep -qP "(^|\s)${pkg_names// /($|\s)|(^|\s)}($|\s)" ./big-pkgs.list; then
               ./scripts/setup-ubuntu.sh
               ./scripts/setup-cgct.sh
