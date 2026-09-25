@@ -131,9 +131,9 @@ jobs:
           done
 
           if [ ! -z "$packages" ]; then
-            # 1. Topological sort is strictly required so dependencies (ncurses) build before targets (bash)
+            # 1. Include default Termux directories so buildorder.py can find dependencies like bash
             shopt -s nullglob
-            ALL_DIRS=""
+            ALL_DIRS="packages/* root-packages/* x11-packages/*"
             for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
               if [ -d "$repo_path" ]; then
                 ALL_DIRS="$ALL_DIRS $repo_path"/*
@@ -166,6 +166,7 @@ jobs:
               TERMUX_BUILDER_IMAGE_NAME="ghcr.io/termux/package-builder-cgct" ./scripts/run-docker.sh ./build-package.sh -I -f -s -a ${{ matrix.target_arch }} --format pacman --library glibc $packages
             fi
           fi
+
 
       - name: Create Pacman Index
         if: always()
