@@ -131,7 +131,6 @@ jobs:
           done
 
           if [ ! -z "$packages" ]; then
-            # 1. Include default Termux directories so buildorder.py can find dependencies like bash
             shopt -s nullglob
             ALL_DIRS="packages/* root-packages/* x11-packages/*"
             for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
@@ -145,15 +144,26 @@ jobs:
             
             SORTED_PACKAGES=""
             for p in $SORTED_ALL; do
+              p_name=$(basename "$p")
               for target in $packages; do
-                if [ "$p" = "$target" ]; then
-                  SORTED_PACKAGES="$SORTED_PACKAGES $p"
+                target_name=$(basename "$target")
+                if [ "$p_name" = "$target_name" ]; then
+                  # Keep the original path (e.g., gpkg/bash) for the builder
+                  SORTED_PACKAGES="$SORTED_PACKAGES $target"
                   break
                 fi
               done
             done
-            packages="$SORTED_PACKAGES"
+            
+            # Trim whitespace and assign
+            packages=$(echo $SORTED_PACKAGES | xargs)
             echo "Optimized build order: $packages"
+
+            # SAFETY NET: If sorting stripped out all packages, fail loudly!
+            if [ -z "$packages" ]; then
+              echo "::error::Package list became empty after dependency sorting! Check your package names."
+              exit 1
+            fi
 
             pkg_names=$(for p in $packages; do basename "$p"; done | tr '\n' ' ')
 
@@ -165,6 +175,8 @@ jobs:
             else
               TERMUX_BUILDER_IMAGE_NAME="ghcr.io/termux/package-builder-cgct" ./scripts/run-docker.sh ./build-package.sh -I -f -s -a ${{ matrix.target_arch }} --format pacman --library glibc $packages
             fi
+          else
+            echo "No packages found to build in initial pass."
           fi
 
 
