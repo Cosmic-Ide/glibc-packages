@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        target_arch: [aarch64, arm, i686, x86_64]
+        target_arch: [aarch64, x86_64]
       fail-fast: false
     steps:
     - name: Clone repository
@@ -160,20 +160,6 @@ jobs:
           fi
         done
 
-    - name: Lint packages
-      run: |
-        declare -a package_recipes
-        for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
-          repo=$(jq --raw-output '.["'${repo_path}'"].name' repo.json)
-          if [ -f ./built_${repo}_packages.txt ]; then
-            package_recipes="$package_recipes $(cat ./built_${repo}_packages.txt | repo_path=${repo_path} awk '{print ENVIRON["repo_path"]"/"$1"/build.sh"}')"
-          fi
-        done
-
-        if [ ! -z "$package_recipes" ]; then
-          ./scripts/lint-packages.sh $package_recipes
-        fi
-
     - name: Build packages
       run: |
         declare -a packages
@@ -232,85 +218,3 @@ jobs:
       with:
         name: pkgs-${{ matrix.target_arch }}-${{ github.sha }}
         path: ./artifacts
-
-  upload:
-    permissions:
-      contents: read
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [aarch64, arm, i686, x86_64]
-      fail-fast: false
-    steps:
-    - name: Clone repository
-      uses: actions/checkout@v7
-    - name: Get *.pkg.* files
-      uses: actions/download-artifact@v8.0.1
-      with:
-        path: ./
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v6.2.1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-    - name: Import GPG key
-      run: |
-        echo '${{ secrets.SF_GPG_BOT }}' > key.gpg
-        gpg --pinentry-mode=loopback --passphrase '${{ secrets.PW_GPG_BOT }}' --import key.gpg > /dev/null
-        rm key.gpg
-    - name: Get files from termux-packages repository
-      run: ./get-build-package.sh
-    - name: Uploading packages to aws
-      run: |
-        source ./scripts/utils/termux/package/termux_package.sh
-        get_name() {
-          local name="" file_sp=(${1//-/ })
-          for _index_f_get_name in $(seq 0 $((${#file_sp[*]}-4))); do
-            if [ -z $name ]; then
-              name="${file_sp[_index_f_get_name]}"
-            else
-              name+="-${file_sp[_index_f_get_name]}"
-            fi
-          done
-          echo "${name//+/0}"
-        }
-        sfuf() {
-          gpg --batch --pinentry-mode=loopback --passphrase '${{ secrets.PW_GPG_BOT }}' --detach-sign --use-agent -u '${{ secrets.KEY_GPG_BOT }}' --no-armor "$1"
-          for format_file in "" ".sig"; do
-            aws s3 cp "${1}${format_file}" s3://'${{ secrets.SFPU }}'/${repo}/${{ matrix.arch }}/"${1##*/}${format_file}"
-          done
-          rm "$1.sig"
-        }
-        tar xf "pkgs-${{ matrix.arch }}-${{ github.sha }}/pkgs-${{ matrix.arch }}-${{ github.sha }}.tar"
-        for repo in $(jq --raw-output 'del(.pkg_format) | .[].name' repo.json); do
-          dp_file="deleted_${repo}_packages.txt"
-          if [[ -f pkgs/$dp_file ]]; then
-            path_dp_file=pkgs/${{ github.sha }}_${dp_file}
-            {
-              for d_pkg in $(cat pkgs/${dp_file}); do
-                if ! termux_package__is_package_name_have_glibc_prefix "${d_pkg}"; then
-                  termux_package__add_prefix_glibc_to_package_name ${d_pkg}
-                else
-                  echo ${d_pkg}
-                fi
-              done
-            } > ${path_dp_file}
-            sfuf "${path_dp_file}"
-          fi
-          for name_pkg in $(cat ./pkgs/built_${repo}_packages.txt); do
-            if ! termux_package__is_package_name_have_glibc_prefix "${name_pkg}"; then
-              name_pkg=$(termux_package__add_prefix_glibc_to_package_name $name_pkg)
-            fi
-            for list_pkg in pkgs/*.pkg.*; do
-              dir_pkg_sp=(${list_pkg//// })
-              for static in "" "-static"; do
-                if [[ $(echo "${name_pkg}${static}" | sed 's/+/0/g') = $(get_name ${dir_pkg_sp[-1]}) ]]; then
-                  sfuf "$list_pkg"
-                fi
-              done
-            done
-          done
-        done

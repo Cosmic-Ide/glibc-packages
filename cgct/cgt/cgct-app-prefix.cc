@@ -10,7 +10,7 @@
 #endif
 #include "system.h"
 
-#define CGCT_DEFAULT_PREFIX "/data/data/com.termux/files/usr/glibc"
+#define CGCT_DEFAULT_PREFIX "/data/data/org.cosmicide/files/arch/usr"
 
 #define CGCT_GETENV_PREFIX getenv("CGCT_APP_PREFIX")
 

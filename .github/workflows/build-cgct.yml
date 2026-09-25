@@ -45,7 +45,7 @@ jobs:
               if [ -d "${il[0]}/${il[1]}" ]; then
                 if [ ! -f pkgs/cgct-need.txt ] || ! $(grep -q "^${il[1]}$" pkgs/cgct-need.txt); then
                   echo "${il[1]}" >> pkgs/cgct-need.txt
-                  curl -L "https://raw.githubusercontent.com/termux-pacman/glibc-packages/$(git log -n 2 --format=format:%H cgct/${il[1]} | tail -1)/cgct/${il[1]}/PKGBUILD" -o pkgs/PKGBUILDs/${il[1]}
+                  curl -L "https://raw.githubusercontent.com/Cosmic-IDE/glibc-packages/$(git log -n 2 --format=format:%H cgct/${il[1]} | tail -1)/cgct/${il[1]}/PKGBUILD" -o pkgs/PKGBUILDs/${il[1]}
                 fi
               else
                 echo "${il[1]}" >> pkgs/deleted_cgct_packages.txt

@@ -1,4 +1,4 @@
-TERMUX_PKG_HOMEPAGE=https://github.com/termux-pacman/glibc-packages
+TERMUX_PKG_HOMEPAGE=https://github.com/Cosmic-IDE/glibc-packages
 TERMUX_PKG_DESCRIPTION="Give fake functions 'linkat' and 'link'"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux-pacman"
