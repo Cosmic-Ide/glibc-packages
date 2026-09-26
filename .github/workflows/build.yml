@@ -51,7 +51,21 @@ jobs:
         docker run --rm --privileged tonistiigi/binfmt --install all
 
     - name: Get files from termux-packages repository
-      run: ./get-build-package.sh
+      run: |
+        ./get-build-package.sh
+
+        # 1. Package Name and Namespace
+        sed -i -E 's|^TERMUX_APP__PACKAGE_NAME=.*|TERMUX_APP__PACKAGE_NAME="org.cosmicide"|' scripts/properties.sh
+        sed -i -E 's|^TERMUX_APP__NAMESPACE=.*|TERMUX_APP__NAMESPACE="org.cosmicide"|' scripts/properties.sh
+
+        # 2. Disable UsrMerge validation (required when removing /usr)
+        sed -i -E 's|^:? *"?__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT=.*|__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT="false"|' scripts/properties.sh
+
+        # 3. Empty the default usr subdirectory
+        sed -i -E 's|^TERMUX__PREFIX_SUBDIR=.*|TERMUX__PREFIX_SUBDIR=""|' scripts/properties.sh
+
+        # 4. Set the glibc prefix subdirectory
+        sed -i -E 's|^TERMUX__PREFIX_GLIBC_SUBDIR=.*|TERMUX__PREFIX_GLIBC_SUBDIR="arch"|' scripts/properties.sh
 
     - name: Free up disk space
       run: ./scripts/free-space.sh
