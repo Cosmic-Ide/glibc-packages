@@ -14,6 +14,11 @@ on:
       packages:
         description: "A space-separated names of packages selected for rebuilding"
         required: true
+      force:
+        description: "Force rebuild (-f)"
+        type: boolean
+        required: false
+        default: false
         
 permissions: {} # none
 
@@ -32,9 +37,6 @@ jobs:
       with:
         fetch-depth: 1000
 
-    - name: Free up disk space
-      run: ./scripts/free-space.sh
-
     - name: Set up QEMU
       run: |
         while true; do
@@ -50,6 +52,9 @@ jobs:
 
     - name: Get files from termux-packages repository
       run: ./get-build-package.sh
+
+    - name: Free up disk space
+      run: ./scripts/free-space.sh
 
     - name: Gather build summary
       run: |
@@ -189,12 +194,19 @@ jobs:
         done
 
         if [ ! -z "$packages" ]; then
-          TERMUX_BUILDER_IMAGE_NAME="ghcr.io/termux/package-builder-cgct" ./scripts/run-docker.sh ./build-package.sh -I -a ${{ matrix.target_arch }} --format pacman --library glibc $packages
+          EXTRA_ARGS=""
+          if [ "${{ github.event.inputs.force }}" == "true" ]; then
+            EXTRA_ARGS="-f"
+          fi
+          TERMUX_BUILDER_IMAGE_NAME="ghcr.io/termux/package-builder-cgct" ./scripts/run-docker.sh ./build-package.sh -I -a ${{ matrix.target_arch }} --format pacman --library glibc $EXTRA_ARGS $packages
         fi
 
     - name: Generate build artifacts
       if: always()
       run: |
+        # Ensure directories exist in case previous steps failed
+        mkdir -p artifacts pkgs
+        
         for repo in $(jq --raw-output 'del(.pkg_format) | .[].name' repo.json); do
           # Put package lists into directory with *.pkg.* files so they will be transferred to
           # upload job.
@@ -204,11 +216,13 @@ jobs:
           test -f ./deleted_${repo}_packages.txt && mv ./deleted_${repo}_packages.txt ./pkgs/
 
           # Move only pkgs from built_packages into pkgs/ folder before
-          # creating an archive.
-          while read -r pkg; do
-            # Match both $pkg.pkg.* and $pkg-static.pkg.*.
-            find output \( -name "$pkg_*.pkg.*" -o -name "$pkg-static_*.pkg.*" \) -type f -print0 | xargs -0r mv -t pkgs/
-          done < <(cat ./pkgs/built_${repo}_packages.txt)
+          # creating an archive. Check if the file exists before attempting to read it.
+          if [ -f "./pkgs/built_${repo}_packages.txt" ]; then
+            while read -r pkg; do
+              # Match both $pkg.pkg.* and $pkg-static.pkg.*.
+              find output \( -name "$pkg_*.pkg.*" -o -name "$pkg-static_*.pkg.*" \) -type f -print0 | xargs -0r mv -t pkgs/
+            done < "./pkgs/built_${repo}_packages.txt"
+          fi
         done
 
         # Files containing certain symbols (e.g. ":") will cause failure in actions/upload-artifact.
