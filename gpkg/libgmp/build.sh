@@ -7,3 +7,7 @@ TERMUX_PKG_REVISION=2
 TERMUX_PKG_SRCURL=https://mirrors.kernel.org/gnu/gmp/gmp-${TERMUX_PKG_VERSION}.tar.xz
 TERMUX_PKG_SHA256=a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898
 TERMUX_PKG_DEPENDS="gcc-libs-glibc"
+
+termux_step_pre_configure() {
+    sed -i 's/void g(){}/void g(int a, ...){}/g' "${TERMUX_PKG_SRCDIR}/configure"
+}
