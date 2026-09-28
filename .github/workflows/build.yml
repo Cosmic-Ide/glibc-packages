@@ -73,7 +73,7 @@ jobs:
 
         sudo chown -R $(id -u):$(id -g) /data
 
-        ln -sfn /data/data/com.termux/files/usr/glibc /data/data/org.cosmicide/files/arch
+        cp -a /data/data/com.termux/files/usr/glibc/* /data/data/org.cosmicide/files/arch/ 2>/dev/null || true
 
         mkdir -p /data/data/org.cosmicide/files/arch/bin
         ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python
