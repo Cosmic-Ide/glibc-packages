@@ -42,7 +42,7 @@ jobs:
         while true; do
           {
             sudo apt update
-            yes | sudo apt install qemu-user qemu-user-static binfmt-support
+            yes | sudo apt install qemu-user qemu-user-binfmt
           } || continue
           break
         done
