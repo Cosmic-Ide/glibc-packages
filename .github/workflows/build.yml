@@ -26,7 +26,7 @@ jobs:
   build:
     permissions:
       contents: read # actions/upload-artifact doesn't need contents: write
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
         target_arch: [aarch64, arm, x86_64]
@@ -72,7 +72,6 @@ jobs:
         sudo mkdir -p /data/data/com.termux/files/usr
         sudo chown -R $(id -u):$(id -g) /data
 
-        echo "deb http://archive.ubuntu.com/ubuntu resolute universe" | sudo tee /etc/apt/sources.list.d/resolute.list
         sudo apt update
 
     - name: Set up host build environment
