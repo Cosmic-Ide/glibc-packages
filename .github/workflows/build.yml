@@ -67,7 +67,7 @@ jobs:
       run: |
         sudo ./scripts/setup-ubuntu.sh
         sudo ./scripts/setup-cgct.sh
-        sudo apt install -y build-essential gcc ninja-build
+        sudo apt install -y --allow-change-held-packages build-essential gcc ninja-build
 
         sudo chown -R $(id -u):$(id -g) /data
 
