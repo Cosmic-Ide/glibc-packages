@@ -82,12 +82,12 @@ jobs:
 
     - name: Free up disk space
       run: |
-        # Strip the destructive apt purge commands from free-space.sh
-        sed -i -E 's/sudo apt purge -yq .*/true # &/' scripts/free-space.sh
-        sed -i -E 's/sudo apt autoremove .*/true # &/' scripts/free-space.sh
-        
-        # Run directory-level cleanup (reclaims ~30GB+ safely)
-        ./scripts/free-space.sh
+        sudo rm -rf /opt/ghc /opt/az /opt/hostedtoolcache /opt/actionarchivecache /opt/runner-cache
+        sudo rm -rf /opt/pipx /usr/share/dotnet /usr/share/swift /usr/share/miniconda /usr/share/az_* /usr/share/gradle-* /usr/share/java /home/runner/.rustup
+        sudo rm -rf /etc/skel /home/packer /home/linuxbrew
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /var/lib/containerd/io.containerd.content.v1.content/
+        sudo apt clean
 
     - name: Gather build summary
       run: |
