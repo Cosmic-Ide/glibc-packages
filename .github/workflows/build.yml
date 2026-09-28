@@ -81,7 +81,13 @@ jobs:
         ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python3
 
     - name: Free up disk space
-      run: ./scripts/free-space.sh
+      run: |
+        # Strip the destructive apt purge commands from free-space.sh
+        sed -i -E 's/sudo apt purge -yq .*/true # &/' scripts/free-space.sh
+        sed -i -E 's/sudo apt autoremove .*/true # &/' scripts/free-space.sh
+        
+        # Run directory-level cleanup (reclaims ~30GB+ safely)
+        ./scripts/free-space.sh
 
     - name: Gather build summary
       run: |
