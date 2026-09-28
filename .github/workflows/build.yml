@@ -71,17 +71,19 @@ jobs:
         sudo mkdir -p /data/data/org.cosmicide/files
         sudo mkdir -p /data/data/com.termux/files/usr
         sudo chown -R $(id -u):$(id -g) /data
-        
-        ln -sfn /data/data/com.termux/files/usr/glibc /data/data/org.cosmicide/files/arch
-        
-        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python
-        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python3
+
 
     - name: Set up host build environment
       run: |
         sudo ./scripts/setup-ubuntu.sh
         ./scripts/setup-cgct.sh
         sudo apt install -y build-essential gcc ninja-build
+        ln -sfn /data/data/com.termux/files/usr/glibc /data/data/org.cosmicide/files/arch
+
+        mkdir -p /data/data/org.cosmicide/files/arch/bin
+        
+        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python
+        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python3
 
     - name: Free up disk space
       run: ./scripts/free-space.sh
