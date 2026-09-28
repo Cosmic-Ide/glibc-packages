@@ -69,11 +69,12 @@ jobs:
         sudo apt install -y ninja-build
 
         sudo mkdir -p /data/data/org.cosmicide/files/arch
-        sudo mkdir -p /data/data/com.termux/files/usr/glibc
-
         sudo chown -R $(id -u):$(id -g) /data
 
-        cp -a /data/data/com.termux/files/usr/glibc/* /data/data/org.cosmicide/files/arch/ 2>/dev/null || true
+        cp -a /data/data/com.termux/files/usr/glibc/. /data/data/org.cosmicide/files/arch/
+
+        rm -rf /data/data/com.termux/files/usr/glibc
+        ln -sfn /data/data/org.cosmicide/files/arch /data/data/com.termux/files/usr/glibc
 
         ln -sfn arch /data/data/org.cosmicide/files/usr
 
