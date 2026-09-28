@@ -44,20 +44,19 @@ jobs:
       run: |
         ./get-build-package.sh
 
-        # 1. Package Name and Namespace
+        # Package Name and Namespace
         sed -i -E 's|^TERMUX_APP__PACKAGE_NAME=.*|TERMUX_APP__PACKAGE_NAME="org.cosmicide"|' scripts/properties.sh
         sed -i -E 's|^TERMUX_APP__NAMESPACE=.*|TERMUX_APP__NAMESPACE="org.cosmicide"|' scripts/properties.sh
 
-        # 2. Disable UsrMerge validation (required when removing /usr)
+        # Disable UsrMerge validation (required when removing /usr)
         sed -i -E 's|^:? *"?__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT=.*|__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT="false"|' scripts/properties.sh
 
-        # 3. Empty the default usr subdirectory
+        sed -i -E 's|^TERMUX_PREFIX_CLASSICAL=.*|TERMUX_PREFIX_CLASSICAL="/data/data/org.cosmicide/files"|' scripts/properties.sh
+        sed -i -E 's|^TERMUX_PREFIX_GLIBC=.*|TERMUX_PREFIX_GLIBC="/data/data/org.cosmicide/files/arch"|' scripts/properties.sh
         sed -i -E 's|^TERMUX__PREFIX_SUBDIR=.*|TERMUX__PREFIX_SUBDIR=""|' scripts/properties.sh
-
-        # 4. Set the glibc prefix subdirectory
         sed -i -E 's|^TERMUX__PREFIX_GLIBC_SUBDIR=.*|TERMUX__PREFIX_GLIBC_SUBDIR="arch"|' scripts/properties.sh
 
-        # 5. Create directories and grant runner ownership so native build can write without sudo
+        # Create directories and grant runner ownership so native build can write without sudo
         sudo mkdir -p /data/data/org.cosmicide/files
         sudo mkdir -p /data/data/com.termux/files/usr
 
