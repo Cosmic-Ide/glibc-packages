@@ -67,6 +67,23 @@ jobs:
         # 4. Set the glibc prefix subdirectory
         sed -i -E 's|^TERMUX__PREFIX_GLIBC_SUBDIR=.*|TERMUX__PREFIX_GLIBC_SUBDIR="arch"|' scripts/properties.sh
 
+        # 5. Create directories and grant runner ownership so native build can write without sudo
+        sudo mkdir -p /data/data/org.cosmicide/files
+        sudo mkdir -p /data/data/com.termux/files/usr
+        sudo chown -R $(id -u):$(id -g) /data
+        
+        ln -sfn /data/data/com.termux/files/usr/glibc /data/data/org.cosmicide/files/arch
+        mkdir -p /data/data/org.cosmicide/files/arch/bin
+        
+        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python
+        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python3
+
+    - name: Set up host build environment
+      run: |
+        sudo ./scripts/setup-ubuntu.sh
+        ./scripts/setup-cgct.sh
+        sudo apt install -y build-essential gcc ninja-build
+
     - name: Free up disk space
       run: ./scripts/free-space.sh
 
@@ -103,13 +120,6 @@ jobs:
             tar cf artifacts/pkgs-${{ matrix.target_arch }}.tar pkgs
             echo "[!] Force exiting as tag '%ci:no-build' was applied to HEAD commit message."
             exit 0
-          fi
-
-          # Build local Docker image if setup scripts were changed.
-          # Useful for pull requests submitting changes for both build environment and packages.
-          if grep -qP '^scripts/(Dockerfile|properties\.sh|setup-android-sdk\.sh|setup-cgct\.sh|setup-ubuntu\.sh)$' <<< "$CHANGED_FILES"; then
-            echo "Detected changes for environment setup scripts. Building custom Docker image now."
-            docker build -t ghcr.io/termux/package-builder-cgct:latest .
           fi
 
           for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
@@ -198,7 +208,7 @@ jobs:
           if [ "${{ github.event.inputs.force }}" == "true" ]; then
             EXTRA_ARGS="-f"
           fi
-          TERMUX_BUILDER_IMAGE_NAME="ghcr.io/termux/package-builder-cgct" ./scripts/run-docker.sh ./build-package.sh -I -a ${{ matrix.target_arch }} --format pacman --library glibc $EXTRA_ARGS $packages
+          ./build-package.sh -I -a ${{ matrix.target_arch }} --format pacman --library glibc $EXTRA_ARGS $packages
         fi
 
     - name: Generate build artifacts
