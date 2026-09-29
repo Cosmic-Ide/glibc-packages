@@ -68,19 +68,13 @@ jobs:
         sudo ./scripts/setup-cgct.sh
         sudo apt install -y ninja-build
 
-        # 1. Create your custom prefix as the REAL directory
         sudo mkdir -p /data/data/org.cosmicide/files/arch
+        sudo mkdir -p /data/data/com.termux/files/usr/glibc
+
+        sudo mount --bind /data/data/org.cosmicide/files/arch /data/data/com.termux/files/usr/glibc
+
         sudo chown -R $(id -u):$(id -g) /data
 
-        # 2. Trick the Termux bootstrap extractor and cross-compiler:
-        # Map the hardcoded com.termux sysroot to your custom org.cosmicide prefix.
-        sudo mkdir -p /data/data/com.termux/files/usr
-        ln -sfn /data/data/org.cosmicide/files/arch /data/data/com.termux/files/usr/glibc
-
-        # 3. Bridge 'usr' to 'arch' in your namespace for hardcoded pacman logic
-        ln -sfn arch /data/data/org.cosmicide/files/usr
-
-        # 4. Create host python wrappers
         mkdir -p /data/data/org.cosmicide/files/arch/bin
         ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python
         ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python3
