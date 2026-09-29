@@ -209,7 +209,7 @@ jobs:
           if [ "${{ github.event.inputs.force }}" == "true" ]; then
             EXTRA_ARGS="-f"
           fi
-          ./build-package.sh -I -a ${{ matrix.target_arch }} --format pacman --library glibc $EXTRA_ARGS $packages
+          ./build-package.sh -a ${{ matrix.target_arch }} --format pacman --library glibc $EXTRA_ARGS $packages
         fi
 
     - name: Generate build artifacts
