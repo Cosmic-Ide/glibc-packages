@@ -24,9 +24,9 @@ termux_step_pre_configure() {
 	CXXFLAGS+=" -I${TERMUX_PREFIX}/include -L${TERMUX_PREFIX}/lib"
 	export GLIBC_LD_LIBRARY_PATH="${TERMUX_PREFIX}/lib${GLIBC_LD_LIBRARY_PATH:+:$GLIBC_LD_LIBRARY_PATH}"
 	local files
-	files=$(grep -srl 'LD_LIBRARY_PATH' "${TERMUX_PKG_SRCDIR}")
+	files=$(grep -srl 'LD_LIBRARY_PATH\|LIBRARY_PATH_PREFIX' "${TERMUX_PKG_SRCDIR}")
 	if [ -n "$files" ]; then
 		sed -i 's/LD_LIBRARY_PATH/GLIBC_LD_LIBRARY_PATH/g' $files
-		sed -i "s|GLIBC_LD_LIBRARY_PATH=|GLIBC_LD_LIBRARY_PATH=${TERMUX_PREFIX}/lib:|g" $files
+		sed -i "s|\\\$(LDLIBRARYPATH_ENVVAR)=|\\\$(LDLIBRARYPATH_ENVVAR)=${TERMUX_PREFIX}/lib:|g" $files
 	fi
 }
