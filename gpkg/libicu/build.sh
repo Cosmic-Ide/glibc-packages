@@ -11,22 +11,13 @@ TERMUX_PKG_SRCURL=https://github.com/unicode-org/icu/releases/download/release-$
 TERMUX_PKG_SHA256=3a2e7a47604ba702f345878308e6fefeca612ee895cf4a5f222e7955fabfe0c0
 TERMUX_PKG_DEPENDS="gcc-libs-glibc, bash-glibc"
 TERMUX_PKG_BUILD_DEPENDS="gcc-libs-glibc"
+TERMUX_PKG_HOSTBUILD=true
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--with-cross-build=$TERMUX_PKG_HOSTBUILD_DIR"
 
 termux_step_post_get_source() {
 	rm ${TERMUX_PKG_SRCDIR}/LICENSE
 	cp ${TERMUX_PKG_BUILDER_DIR}/LICENSE ${TERMUX_PKG_SRCDIR}
 	TERMUX_PKG_SRCDIR+="/source"
+	sed -r -i 's/(for ac_prog in )clang(\+\+)? /\1/g' ${TERMUX_PKG_SRCDIR}/configure
 	find . -type f | xargs touch
-}
-
-termux_step_pre_configure() {
-	CFLAGS+=" -I${TERMUX_PREFIX}/include -L${TERMUX_PREFIX}/lib"
-	CXXFLAGS+=" -I${TERMUX_PREFIX}/include -L${TERMUX_PREFIX}/lib"
-	export GLIBC_LD_LIBRARY_PATH="${TERMUX_PREFIX}/lib${GLIBC_LD_LIBRARY_PATH:+:$GLIBC_LD_LIBRARY_PATH}"
-	local files
-	files=$(grep -srl 'LD_LIBRARY_PATH\|LIBRARY_PATH_PREFIX' "${TERMUX_PKG_SRCDIR}")
-	if [ -n "$files" ]; then
-		sed -i 's/LD_LIBRARY_PATH/GLIBC_LD_LIBRARY_PATH/g' $files
-		sed -i "s|\\\$(LDLIBRARYPATH_ENVVAR)=|\\\$(LDLIBRARYPATH_ENVVAR)=${TERMUX_PREFIX}/lib:|g" $files
-	fi
 }
