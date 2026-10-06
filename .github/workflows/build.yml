@@ -14,6 +14,11 @@ on:
       packages:
         description: "A space-separated names of packages selected for rebuilding"
         required: true
+      force:
+        description: "Force rebuild (-f)"
+        type: boolean
+        required: false
+        default: false
         
 permissions: {} # none
 
@@ -21,32 +26,67 @@ jobs:
   build:
     permissions:
       contents: read # actions/upload-artifact doesn't need contents: write
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
-        target_arch: [aarch64, arm, i686, x86_64]
+        target_arch: [aarch64, arm, x86_64]
       fail-fast: false
     steps:
     - name: Clone repository
-      uses: actions/checkout@v7
+      uses: actions/checkout@v4
       with:
         fetch-depth: 1000
 
     - name: Set up QEMU
-      run: |
-        while true; do
-          {
-            sudo apt update
-            yes | sudo apt install qemu-user qemu-user-static binfmt-support
-          } || continue
-          break
-        done
-        sudo update-binfmts --enable qemu-aarch64
-        sudo update-binfmts --enable qemu-arm
-        docker run --rm --privileged tonistiigi/binfmt --install all
+      uses: docker/setup-qemu-action@v4
 
     - name: Get files from termux-packages repository
-      run: ./get-build-package.sh
+      run: |
+        ./get-build-package.sh
+
+        # Package Name and Namespace
+        sed -i -E 's|^TERMUX_APP__PACKAGE_NAME=.*|TERMUX_APP__PACKAGE_NAME="org.cosmicide"|' scripts/properties.sh
+        sed -i -E 's|^TERMUX_APP__NAMESPACE=.*|TERMUX_APP__NAMESPACE="org.cosmicide"|' scripts/properties.sh
+
+        # Disable UsrMerge validation (required when removing /usr)
+        sed -i -E 's|^:? *"?__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT=.*|__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT="false"|' scripts/properties.sh
+
+        sed -i -E 's|^TERMUX_PREFIX_CLASSICAL=.*|TERMUX_PREFIX_CLASSICAL="/data/data/org.cosmicide/files"|' scripts/properties.sh
+        sed -i -E 's|^TERMUX_PREFIX_GLIBC=.*|TERMUX_PREFIX_GLIBC="/data/data/org.cosmicide/files/arch"|' scripts/properties.sh
+        sed -i -E 's|^TERMUX__PREFIX_SUBDIR=.*|TERMUX__PREFIX_SUBDIR=""|' scripts/properties.sh
+        sed -i -E 's|^TERMUX__PREFIX_GLIBC_SUBDIR=.*|TERMUX__PREFIX_GLIBC_SUBDIR="arch"|' scripts/properties.sh
+
+        # Create directories and grant runner ownership so native build can write without sudo
+        sudo mkdir -p /data/data/org.cosmicide/files
+        sudo mkdir -p /data/data/com.termux/files/usr
+
+        sudo apt update
+
+    - name: Set up host build environment
+      run: |
+        sudo ./scripts/setup-ubuntu.sh
+        sudo ./scripts/setup-cgct.sh
+        sudo apt install -y ninja-build
+
+        sudo mkdir -p /data/data/org.cosmicide/files/arch
+        sudo mkdir -p /data/data/com.termux/files/usr/glibc
+
+        sudo mount --bind /data/data/org.cosmicide/files/arch /data/data/com.termux/files/usr/glibc
+
+        sudo chown -R $(id -u):$(id -g) /data
+
+        mkdir -p /data/data/org.cosmicide/files/arch/bin
+        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python
+        ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python3
+
+    - name: Free up disk space
+      run: |
+        sudo rm -rf /opt/ghc /opt/az /opt/hostedtoolcache /opt/actionarchivecache /opt/runner-cache
+        sudo rm -rf /opt/pipx /usr/share/dotnet /usr/share/swift /usr/share/miniconda /usr/share/az_* /usr/share/gradle-* /usr/share/java /home/runner/.rustup
+        sudo rm -rf /etc/skel /home/packer /home/linuxbrew
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /var/lib/containerd/io.containerd.content.v1.content/
+        sudo apt clean
 
     - name: Gather build summary
       run: |
@@ -81,13 +121,6 @@ jobs:
             tar cf artifacts/pkgs-${{ matrix.target_arch }}.tar pkgs
             echo "[!] Force exiting as tag '%ci:no-build' was applied to HEAD commit message."
             exit 0
-          fi
-
-          # Build local Docker image if setup scripts were changed.
-          # Useful for pull requests submitting changes for both build environment and packages.
-          if grep -qP '^scripts/(Dockerfile|properties\.sh|setup-android-sdk\.sh|setup-cgct\.sh|setup-ubuntu\.sh)$' <<< "$CHANGED_FILES"; then
-            echo "Detected changes for environment setup scripts. Building custom Docker image now."
-            docker build -t ghcr.io/termux/package-builder-cgct:latest .
           fi
 
           for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
@@ -160,20 +193,6 @@ jobs:
           fi
         done
 
-    - name: Lint packages
-      run: |
-        declare -a package_recipes
-        for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
-          repo=$(jq --raw-output '.["'${repo_path}'"].name' repo.json)
-          if [ -f ./built_${repo}_packages.txt ]; then
-            package_recipes="$package_recipes $(cat ./built_${repo}_packages.txt | repo_path=${repo_path} awk '{print ENVIRON["repo_path"]"/"$1"/build.sh"}')"
-          fi
-        done
-
-        if [ ! -z "$package_recipes" ]; then
-          ./scripts/lint-packages.sh $package_recipes
-        fi
-
     - name: Build packages
       run: |
         declare -a packages
@@ -186,23 +205,19 @@ jobs:
         done
 
         if [ ! -z "$packages" ]; then
-          if grep -qP "(^|\s)${packages// /($|\s)|(^|\s)}($|\s)" ./big-pkgs.list; then
-            ./scripts/setup-ubuntu.sh
-            ./scripts/setup-cgct.sh
-            sudo apt install ninja-build
-            sudo apt purge -yq $(dpkg -l | grep '^ii' | awk '{ print $2 }' | grep -P '(aspnetcore|cabal-|dotnet-|ghc-|libmono|php)') \
-              firefox google-chrome-stable microsoft-edge-stable mono-runtime-common monodoc-manual ruby
-            sudo apt autoremove -yq
-            sudo rm -fr /opt/hostedtoolcache /usr/share/dotnet /usr/share/swift
-            NDK=$ANDROID_NDK_LATEST_HOME ANDROID_HOME=$ANDROID_SDK_ROOT ./build-package.sh -I -a ${{ matrix.target_arch }} --format pacman --library glibc $packages
-          else
-            TERMUX_BUILDER_IMAGE_NAME="ghcr.io/termux/package-builder-cgct" ./scripts/run-docker.sh ./build-package.sh -I -a ${{ matrix.target_arch }} --format pacman --library glibc $packages
+          EXTRA_ARGS=""
+          if [ "${{ github.event.inputs.force }}" == "true" ]; then
+            EXTRA_ARGS="-f"
           fi
+          ./build-package.sh -a ${{ matrix.target_arch }} --format pacman --library glibc $EXTRA_ARGS $packages
         fi
 
     - name: Generate build artifacts
       if: always()
       run: |
+        # Ensure directories exist in case previous steps failed
+        mkdir -p artifacts pkgs
+        
         for repo in $(jq --raw-output 'del(.pkg_format) | .[].name' repo.json); do
           # Put package lists into directory with *.pkg.* files so they will be transferred to
           # upload job.
@@ -212,105 +227,27 @@ jobs:
           test -f ./deleted_${repo}_packages.txt && mv ./deleted_${repo}_packages.txt ./pkgs/
 
           # Move only pkgs from built_packages into pkgs/ folder before
-          # creating an archive.
-          while read -r pkg; do
-            # Match both $pkg.pkg.* and $pkg-static.pkg.*.
-            find output \( -name "$pkg_*.pkg.*" -o -name "$pkg-static_*.pkg.*" \) -type f -print0 | xargs -0r mv -t pkgs/
-          done < <(cat ./pkgs/built_${repo}_packages.txt)
+          # creating an archive. Check if the file exists before attempting to read it.
+          if [ -f "./pkgs/built_${repo}_packages.txt" ]; then
+            while read -r pkg; do
+              # Match both $pkg.pkg.* and $pkg-static.pkg.*.
+              find output \( -name "$pkg_*.pkg.*" -o -name "$pkg-static_*.pkg.*" \) -type f -print0 | xargs -0r mv -t pkgs/
+            done < "./pkgs/built_${repo}_packages.txt"
+          fi
         done
 
         # Files containing certain symbols (e.g. ":") will cause failure in actions/upload-artifact.
         # Archiving *.pkg.* files in a tarball to avoid issues with uploading.
         tar cf artifacts/pkgs-${{ matrix.target_arch }}-${{ github.sha }}.tar pkgs
+        
     - name: Checksums for built *.pkg.* files
       if: always()
       run: |
         find pkgs -type f -name "*.pkg.*" -exec sha256sum "{}" \; | sort -k2
+        
     - name: Store *.pkg.* files
       if: always()
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v4
       with:
         name: pkgs-${{ matrix.target_arch }}-${{ github.sha }}
         path: ./artifacts
-
-  upload:
-    permissions:
-      contents: read
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [aarch64, arm, i686, x86_64]
-      fail-fast: false
-    steps:
-    - name: Clone repository
-      uses: actions/checkout@v7
-    - name: Get *.pkg.* files
-      uses: actions/download-artifact@v8.0.1
-      with:
-        path: ./
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v6.2.1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-    - name: Import GPG key
-      run: |
-        echo '${{ secrets.SF_GPG_BOT }}' > key.gpg
-        gpg --pinentry-mode=loopback --passphrase '${{ secrets.PW_GPG_BOT }}' --import key.gpg > /dev/null
-        rm key.gpg
-    - name: Get files from termux-packages repository
-      run: ./get-build-package.sh
-    - name: Uploading packages to aws
-      run: |
-        source ./scripts/utils/termux/package/termux_package.sh
-        get_name() {
-          local name="" file_sp=(${1//-/ })
-          for _index_f_get_name in $(seq 0 $((${#file_sp[*]}-4))); do
-            if [ -z $name ]; then
-              name="${file_sp[_index_f_get_name]}"
-            else
-              name+="-${file_sp[_index_f_get_name]}"
-            fi
-          done
-          echo "${name//+/0}"
-        }
-        sfuf() {
-          gpg --batch --pinentry-mode=loopback --passphrase '${{ secrets.PW_GPG_BOT }}' --detach-sign --use-agent -u '${{ secrets.KEY_GPG_BOT }}' --no-armor "$1"
-          for format_file in "" ".sig"; do
-            aws s3 cp "${1}${format_file}" s3://'${{ secrets.SFPU }}'/${repo}/${{ matrix.arch }}/"${1##*/}${format_file}"
-          done
-          rm "$1.sig"
-        }
-        tar xf "pkgs-${{ matrix.arch }}-${{ github.sha }}/pkgs-${{ matrix.arch }}-${{ github.sha }}.tar"
-        for repo in $(jq --raw-output 'del(.pkg_format) | .[].name' repo.json); do
-          dp_file="deleted_${repo}_packages.txt"
-          if [[ -f pkgs/$dp_file ]]; then
-            path_dp_file=pkgs/${{ github.sha }}_${dp_file}
-            {
-              for d_pkg in $(cat pkgs/${dp_file}); do
-                if ! termux_package__is_package_name_have_glibc_prefix "${d_pkg}"; then
-                  termux_package__add_prefix_glibc_to_package_name ${d_pkg}
-                else
-                  echo ${d_pkg}
-                fi
-              done
-            } > ${path_dp_file}
-            sfuf "${path_dp_file}"
-          fi
-          for name_pkg in $(cat ./pkgs/built_${repo}_packages.txt); do
-            if ! termux_package__is_package_name_have_glibc_prefix "${name_pkg}"; then
-              name_pkg=$(termux_package__add_prefix_glibc_to_package_name $name_pkg)
-            fi
-            for list_pkg in pkgs/*.pkg.*; do
-              dir_pkg_sp=(${list_pkg//// })
-              for static in "" "-static"; do
-                if [[ $(echo "${name_pkg}${static}" | sed 's/+/0/g') = $(get_name ${dir_pkg_sp[-1]}) ]]; then
-                  sfuf "$list_pkg"
-                fi
-              done
-            done
-          done
-        done

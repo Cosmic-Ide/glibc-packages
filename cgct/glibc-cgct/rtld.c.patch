@@ -5,7 +5,7 @@
       the work but this does not matter, since it is not for production
       use.  */
 -  static const char preload_file[] = "/etc/ld.so.preload";
-+  static const char preload_file[] = "/data/data/com.termux/cgct/etc/ld.so.preload";
++  static const char preload_file[] = "/data/data/org.cosmicide/files/arch/usr/cgct/etc/ld.so.preload";
    if (__glibc_unlikely (__access (preload_file, R_OK) == 0))
      {
        /* Read the contents of the file.  */

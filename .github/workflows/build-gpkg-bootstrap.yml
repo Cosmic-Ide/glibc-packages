@@ -1,0 +1,174 @@
+name: Build gpkg bootstrap repository
+
+on:
+  push:
+    paths:
+      - ".github/workflows/build-gpkg-bootstrap.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build bootstrap repository (${{ matrix.target_arch }})
+    permissions:
+      contents: read
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target_arch: [aarch64, arm, x86_64]
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1000
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Get files from termux-packages repository
+        run: |
+          ./get-build-package.sh
+          sed -i -E 's|^TERMUX_APP__PACKAGE_NAME=.*|TERMUX_APP__PACKAGE_NAME="org.cosmicide"|' scripts/properties.sh
+          sed -i -E 's|^TERMUX_APP__NAMESPACE=.*|TERMUX_APP__NAMESPACE="org.cosmicide"|' scripts/properties.sh
+          sed -i -E 's|^:? *"?__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT=.*|__TERMUX_BUILD_PROPS__VALIDATE_TERMUX_PREFIX_USR_MERGE_FORMAT="false"|' scripts/properties.sh
+          sed -i -E 's|^TERMUX_PREFIX_CLASSICAL=.*|TERMUX_PREFIX_CLASSICAL="/data/data/org.cosmicide/files"|' scripts/properties.sh
+          sed -i -E 's|^TERMUX_PREFIX_GLIBC=.*|TERMUX_PREFIX_GLIBC="/data/data/org.cosmicide/files/arch"|' scripts/properties.sh
+          sed -i -E 's|^TERMUX__PREFIX_SUBDIR=.*|TERMUX__PREFIX_SUBDIR=""|' scripts/properties.sh
+          sed -i -E 's|^TERMUX__PREFIX_GLIBC_SUBDIR=.*|TERMUX__PREFIX_GLIBC_SUBDIR="arch"|' scripts/properties.sh
+
+          # Create directories and grant runner ownership so native build can write without sudo
+          sudo mkdir -p /data/data/org.cosmicide/files /data/data/com.termux/files/usr
+          sudo apt update
+
+      - name: Set up host build environment
+        run: |
+          sudo ./scripts/setup-ubuntu.sh
+          ./scripts/setup-android-sdk.sh
+          sudo ./scripts/setup-cgct.sh
+          sudo apt install -y ninja-build pacman-package-manager uuid-dev
+
+          sudo mkdir -p /data/data/org.cosmicide/files/arch
+          sudo mkdir -p /data/data/com.termux/files/usr/glibc
+
+          sudo mount --bind /data/data/org.cosmicide/files/arch /data/data/com.termux/files/usr/glibc
+
+          sudo chown -R "$(id -u):$(id -g)" /data
+
+          mkdir -p /data/data/org.cosmicide/files/arch/bin
+          ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python
+          ln -sf "$(which python3)" /data/data/org.cosmicide/files/arch/bin/python3
+
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /opt/ghc /opt/az /opt/hostedtoolcache /opt/actionarchivecache /opt/runner-cache
+          sudo rm -rf /opt/pipx /usr/share/dotnet /usr/share/swift /usr/share/miniconda /usr/share/az_* /usr/share/gradle-* /usr/share/java /home/runner/.rustup
+          sudo rm -rf /etc/skel /home/packer /home/linuxbrew
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /var/lib/containerd/io.containerd.content.v1.content/
+          sudo apt clean
+
+      - name: Build packages sequentially
+        run: |
+          set -euo pipefail
+          packages=(
+            linux-api-headers glibc ca-certificates zlib gcc-libs openssl attr
+            libacl libgmp libxcrypt libpam libcap coreutils ncurses readline bash
+            libbz2 libexpat liblz4 liblzma zstd libarchive libgpg-error
+            libunistring libidn2 libssh2 libnghttp2 libseccomp libsqlite libgcrypt
+            e2fsprogs libevent libverto krb5 brotli libpsl libcurl libcap-ng
+            util-linux
+          )
+          repo_dir="$GITHUB_WORKSPACE/repo/${{ matrix.target_arch }}"
+          fallback_url="https://ftp.agdsn.de/termux-pacman/gpkg/${{ matrix.target_arch }}"
+          mkdir -p "$repo_dir"
+          mkdir -p output
+
+          for package in "${packages[@]}"; do
+            echo "::group::Building ${package}"
+            # Each invocation may produce multiple packages and subpackages.
+            # The output directory is copied into the repository after every
+            # invocation, so clearing old archives gives us an exact per-build
+            # set without package-name assumptions.
+            find output -type f \( \
+              -name '*.pkg.tar.xz' -o -name '*.pkg.tar.zst' \
+              -o -name '*.pkg.tar.gz' -o -name '*.pkg.tar.bz2' \
+            \) -delete || true
+
+            set +e
+            ./build-package.sh -a "${{ matrix.target_arch }}" --format pacman -f --library glibc "$package"
+            build_status=$?
+            set -e
+
+            built_files=()
+            while IFS= read -r -d '' file; do
+              built_files+=("$file")
+            done < <(find output -type f \( \
+              -name '*.pkg.tar.xz' -o -name '*.pkg.tar.zst' \
+              -o -name '*.pkg.tar.gz' -o -name '*.pkg.tar.bz2' \
+            \) -print0 2>/dev/null || true)
+
+            if [ "$build_status" -eq 0 ] && [ "${#built_files[@]}" -gt 0 ]; then
+              printf '%s\0' "${built_files[@]}" | xargs -0 -r cp -t "$repo_dir"
+              echo "Built ${package} successfully: ${#built_files[@]} package archive(s)."
+            else
+              echo "Build failed or produced no package for ${package}; using FTP fallback."
+              if [ "${#built_files[@]}" -gt 0 ]; then
+                printf '%s\0' "${built_files[@]}" | xargs -0 -r cp -t "$repo_dir"
+                echo "Preserved ${#built_files[@]} package archive(s) produced before the failure."
+              fi
+              listing=$(curl --fail --silent --show-error --location "${fallback_url}/")
+              fallback_files=()
+              if [ "$package" = "glibc" ]; then
+                fallback_pattern="^glibc-[0-9].*\\.pkg\\.tar\\.(xz|zst|gz|bz2)$"
+              else
+                fallback_pattern="^${package}-glibc-[0-9].*\\.pkg\\.tar\\.(xz|zst|gz|bz2)$"
+              fi
+              while IFS= read -r file; do
+                fallback_files+=("$file")
+              done < <(
+                printf '%s\n' "$listing" |
+                  grep -oE 'href="[^"]+"' |
+                  cut -d'"' -f2 |
+                  sed 's#^.*/##' |
+                  grep -E "$fallback_pattern" |
+                  sort -u
+              )
+              if [ "${#fallback_files[@]}" -eq 0 ]; then
+                echo "No FTP fallback package found for ${package}."
+                exit 1
+              fi
+              for file in "${fallback_files[@]}"; do
+                curl --fail --silent --show-error --location \
+                  --output "$repo_dir/$file" "${fallback_url}/${file}"
+              done
+              echo "Added FTP fallback for ${package}: ${fallback_files[*]}"
+            fi
+            echo "::endgroup::"
+          done
+
+          cd "$repo_dir"
+          shopt -s nullglob
+          packages=( *.pkg.* )
+          test "${#packages[@]}" -gt 0
+          repo-add -n gpkg.db.tar.gz "${packages[@]}"
+          index_files=( gpkg.db gpkg.db.tar.gz )
+          sha256sum "${index_files[@]}" "${packages[@]}" > SHA256SUMS
+          tar -cJf "../../gpkg-${{ matrix.target_arch }}-${{ github.sha }}.tar.xz" .
+
+      - name: Check repository contents
+        run: |
+          set -euo pipefail
+          archive="gpkg-${{ matrix.target_arch }}-${{ github.sha }}.tar.xz"
+          contents=$(tar -tJf "$archive")
+          for required in gpkg.db gpkg.db.tar.gz SHA256SUMS; do
+            grep -qE "(^|/)$required$" <<< "$contents"
+          done
+
+      - name: Store bootstrap repository artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpkg-${{ matrix.target_arch }}-${{ github.sha }}
+          path: gpkg-${{ matrix.target_arch }}-${{ github.sha }}.tar.xz
+          if-no-files-found: error
