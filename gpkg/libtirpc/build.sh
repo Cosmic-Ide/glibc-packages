@@ -6,3 +6,4 @@ TERMUX_PKG_VERSION=1.3.7
 TERMUX_PKG_SRCURL=https://downloads.sourceforge.net/sourceforge/libtirpc/libtirpc-${TERMUX_PKG_VERSION}.tar.bz2
 TERMUX_PKG_SHA256=b47d3ac19d3549e54a05d0019a6c400674da716123858cfdb6d3bdd70a66c702
 TERMUX_PKG_DEPENDS="krb5-glibc"
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--disable-gssapi"
