@@ -87,10 +87,7 @@ jobs:
 
           for package in "${packages[@]}"; do
             echo "::group::Building ${package}"
-            # Each invocation may produce multiple packages and subpackages.
-            # The output directory is copied into the repository after every
-            # invocation, so clearing old archives gives us an exact per-build
-            # set without package-name assumptions.
+  
             find output -type f \( \
               -name '*.pkg.tar.xz' -o -name '*.pkg.tar.zst' \
               -o -name '*.pkg.tar.gz' -o -name '*.pkg.tar.bz2' \
@@ -112,6 +109,10 @@ jobs:
             if [ "$build_status" -eq 0 ] && [ "${#built_files[@]}" -gt 0 ]; then
               printf '%s\0' "${built_files[@]}" | xargs -0 -r cp -t "$repo_dir"
               echo "Built ${package} successfully: ${#built_files[@]} package archive(s)."
+
+              for file in "${built_files[@]}"; do
+                sudo tar -xf "$file" -C / || true
+              done
             else
               echo "Build failed or produced no package for ${package}; using FTP fallback."
               if [ "${#built_files[@]}" -gt 0 ]; then
@@ -142,6 +143,8 @@ jobs:
               for file in "${fallback_files[@]}"; do
                 curl --fail --silent --show-error --location \
                   --output "$repo_dir/$file" "${fallback_url}/${file}"
+
+                sudo tar -xf "$repo_dir/$file" -C / || true
               done
               echo "Added FTP fallback for ${package}: ${fallback_files[*]}"
             fi
