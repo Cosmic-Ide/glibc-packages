@@ -7,3 +7,7 @@ TERMUX_PKG_SRCURL=https://download.savannah.nongnu.org/releases/acl/acl-${TERMUX
 TERMUX_PKG_SHA256=e661131456d2708a01c614a0f400e11d7d1bfaeb6f3e74b75bb980b72f0161a3
 TERMUX_PKG_DEPENDS="attr-glibc"
 TERMUX_PKG_BUILD_DEPENDS="attr-glibc"
+
+termux_step_pre_configure() {
+    sed -i 's|attr/error_context.h|stdio.h|g' configure
+}
