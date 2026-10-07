@@ -3,10 +3,7 @@ TERMUX_PKG_DESCRIPTION="Access control list utilities, libraries and headers"
 TERMUX_PKG_LICENSE="LGPL-2.1, GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux-pacman"
 TERMUX_PKG_VERSION=2.4.0
-TERMUX_PKG_SRCURL=git+https://git.savannah.nongnu.org/git/acl.git
+TERMUX_PKG_SRCURL=https://download.savannah.nongnu.org/releases/acl/acl-${TERMUX_PKG_VERSION}.tar.xz
+TERMUX_PKG_SHA256=e661131456d2708a01c614a0f400e11d7d1bfaeb6f3e74b75bb980b72f0161a3
 TERMUX_PKG_DEPENDS="attr-glibc"
 TERMUX_PKG_BUILD_DEPENDS="attr-glibc"
-
-termux_step_pre_configure() {
-	./autogen.sh
-}
