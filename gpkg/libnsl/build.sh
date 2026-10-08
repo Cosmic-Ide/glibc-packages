@@ -8,5 +8,6 @@ TERMUX_PKG_SHA256=59048b53be8d3904bf939313debf13956a881b0de79da40f7719a77bcd1e9c
 TERMUX_PKG_DEPENDS="libtirpc-glibc"
 
 termux_step_pre_configure() {
+	CPPFLAGS+=" -I$TERMUX_PREFIX/include/tirpc"
 	autoreconf -fiv
 }
