@@ -65,6 +65,7 @@ jobs:
     - name: Set up host build environment
       run: |
         sudo ./scripts/setup-ubuntu.sh
+        ./scripts/setup-android-sdk.sh
         sudo ./scripts/setup-cgct.sh
         sudo apt install -y ninja-build
 
