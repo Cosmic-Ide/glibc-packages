@@ -13,7 +13,6 @@ TERMUX_PKG_VERSION=2.42.1
 TERMUX_PKG_SRCURL=https://github.com/util-linux/util-linux/archive/refs/tags/v${TERMUX_PKG_VERSION}.zip
 TERMUX_PKG_SHA256=75a930725806c4cafe75637f0940833e8506527093b36c8148d9b6ee020a23b3
 TERMUX_PKG_DEPENDS="libcap-ng-glibc, ncurses-glibc, zlib-glibc, libpam-glibc, libsmartcols-glibc, bash-glibc"
-TERMUX_PKG_BUILD_DEPENDS="python-glibc"
 TERMUX_PKG_ESSENTIAL=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dlibuser=disabled
@@ -33,7 +32,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dbuild-su=disabled
 -Dbuild-lsmem=disabled
 -Dbuild-chmem=disabled
--Dpython=$TERMUX_PREFIX/bin/python
+-Dbuild-python=disabled
 "
 
 termux_step_configure() {
