@@ -35,6 +35,16 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Dbuild-python=disabled
 "
 
+termux_step_pre_configure() {
+	LDFLAGS+=" -Wl,-rpath-link,$TERMUX_PKG_BUILDDIR/libblkid"
+	LDFLAGS+=" -Wl,-rpath-link,$TERMUX_PKG_BUILDDIR/libmount"
+	LDFLAGS+=" -Wl,-rpath-link,$TERMUX_PKG_BUILDDIR/libuuid"
+	LDFLAGS+=" -Wl,-rpath-link,$TERMUX_PKG_BUILDDIR/libsmartcols"
+	LDFLAGS+=" -Wl,-rpath-link,$TERMUX_PKG_BUILDDIR/libfdisk"
+	LDFLAGS+=" -Wl,-rpath-link,$TERMUX_PKG_BUILDDIR/liblastlog2"
+}
+
 termux_step_configure() {
 	termux_step_configure_meson
 }
+
