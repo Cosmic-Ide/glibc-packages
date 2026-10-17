@@ -25,7 +25,7 @@ prepare() {
 		done
 	done
 
-	rm ./glibc/sysdeps/unix/sysv/linux/x86_64/configure*
+	rm ./arch/sysdeps/unix/sysv/linux/x86_64/configure*
 
 	mkdir -p glibc-build || true
 }
@@ -40,7 +40,7 @@ build() {
 	echo "sbindir=${CGCT_PATH}/bin" >> configparms
 	echo "rootsbindir=${CGCT_PATH}/bin" >> configparms
 
-	../glibc/configure \
+	../arch/configure \
 		--prefix=$CGCT_PATH \
 		--libdir=${CGCT_PATH}/lib \
 		--libexecdir=${CGCT_PATH}/lib \

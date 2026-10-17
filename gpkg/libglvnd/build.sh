@@ -22,7 +22,7 @@ termux_step_post_massage() {
 	# conflict with system ones. So let's check if SONAME is properly set.
 	local n
 	for n in GL EGL GLESv1_CM GLESv2; do
-		local f="glibc/lib/lib${n}.so"
+		local f="arch/lib/lib${n}.so"
 		if [ ! -e "${f}" ]; then
 			termux_error_exit "Shared library ${f} does not exist."
 		fi

@@ -15,7 +15,7 @@ TERMUX_PKG_SHA256=(
 TERMUX_PKG_DEPENDS="libbz2-glibc, libexpat-glibc, gdbm-glibc, libffi-glibc, libnsl-glibc, libxcrypt-glibc, openssl-glibc, zlib-glibc"
 TERMUX_PKG_BUILD_DEPENDS="sqlite-glibc, mpdecimal-glibc, llvm-glibc"
 TERMUX_PKG_PROVIDES="python3-glibc"
-TERMUX_PKG_RM_AFTER_INSTALL="glibc/lib/python${_MAJOR_VERSION}/site-packages/*/"
+TERMUX_PKG_RM_AFTER_INSTALL="arch/lib/python${_MAJOR_VERSION}/site-packages/*/"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_pre_configure() {

@@ -1,4 +1,4 @@
-TERMUX_SUBPKG_INCLUDE="glibc/lib/python*"
+TERMUX_SUBPKG_INCLUDE="arch/lib/python*"
 TERMUX_SUBPKG_DESCRIPTION="The xcbgen Python module"
 TERMUX_SUBPKG_RECOMMENDS="python-glibc"
 TERMUX_SUBPKG_BREAKS="xcb-proto-glibc (<< 1.15.2)"

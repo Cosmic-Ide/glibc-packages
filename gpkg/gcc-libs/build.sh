@@ -2,14 +2,11 @@ TERMUX_PKG_HOMEPAGE=https://gcc.gnu.org/
 TERMUX_PKG_DESCRIPTION="Runtime libraries shipped by GCC"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux-pacman"
-TERMUX_PKG_VERSION=14.2.1
+TERMUX_PKG_VERSION=16.2.0
 TERMUX_PKG_REVISION=1
-_COMMIT=a8ee522c5923ba17851e4b71316a2dff19d6368f
-TERMUX_PKG_SRCURL=git+https://sourceware.org/git/gcc
-TERMUX_PKG_SHA256=ee47c48b656c2fe6e937f99954303f07ef6eab26d40cf70401880cdc2c290b1c
-TERMUX_PKG_GIT_BRANCH="master"
-#TERMUX_PKG_SRCURL=https://ftp.gnu.org/gnu/gcc/gcc-$TERMUX_PKG_VERSION/gcc-$TERMUX_PKG_VERSION.tar.xz
-#TERMUX_PKG_SHA256=a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9
+_COMMIT=78d4ac73dd391005b895a6148cd9831e28e1208b
+TERMUX_PKG_SRCURL=https://github.com/gcc-mirror/gcc/archive/${_COMMIT}.tar.gz
+TERMUX_PKG_SHA256="12efc7e85959a0a4585563e016f9f30c4d7ee60d3ece8ea2cfcdd1480f7860ea"
 TERMUX_PKG_DEPENDS="glibc"
 TERMUX_PKG_BUILD_DEPENDS="doxygen-glibc"
 TERMUX_PKG_BREAKS="gcc-glibc-libs-dev"
@@ -17,16 +14,6 @@ TERMUX_PKG_REPLACES="gcc-glibc-libs-dev"
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_SEPARATE_SUB_DEPENDS=true
 TERMUX_PKG_ONLY_INSTALLING=true
-
-termux_step_post_get_source() {
-	git fetch --unshallow
-	git checkout $_COMMIT
-
-	local s=$(find . -type f ! -path '*/.git/*' -print0 | xargs -0 sha256sum | LC_ALL=C sort | sha256sum)
-	if [[ "${s}" != "${TERMUX_PKG_SHA256}  "* ]]; then
-		termux_error_exit "Checksum mismatch for source files."
-	fi
-}
 
 termux_step_pre_configure() {
 	sed -i 's@\./fixinc\.sh@-c true@' ${TERMUX_PKG_SRCDIR}/gcc/Makefile.in
@@ -180,13 +167,11 @@ termux_step_make_install() {
 
 	ln -s gfortran $TERMUX_PREFIX/bin/f95
 
-	if [ -d $TERMUX_PREFIX/lib64 ]; then
-		mv $TERMUX_PREFIX/lib64/* $TERMUX_PREFIX/lib
-		rm -fr $TERMUX_PREFIX/lib64
+	if [ -d $TERMUX_PREFIX/lib64 ] && [ ! -L $TERMUX_PREFIX/lib64 ]; then
+		cp -an $TERMUX_PREFIX/lib64/* $TERMUX_PREFIX/lib/ 2>/dev/null || true
 	fi
 
-	if [ -d $TERMUX_PREFIX/lib32 ]; then
-		mv $TERMUX_PREFIX/lib32/* $TERMUX_PREFIX/lib
-		rm -fr $TERMUX_PREFIX/lib32
+	if [ -d $TERMUX_PREFIX/lib32 ] && [ ! -L $TERMUX_PREFIX/lib32 ]; then
+		cp -an $TERMUX_PREFIX/lib32/* $TERMUX_PREFIX/lib/ 2>/dev/null || true
 	fi
 }

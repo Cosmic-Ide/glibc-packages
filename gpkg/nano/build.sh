@@ -11,7 +11,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --enable-nanorc
 --enable-multibuffer
 "
-TERMUX_PKG_CONFFILES="glibc/etc/nanorc"
+TERMUX_PKG_CONFFILES="arch/etc/nanorc"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_post_make_install() {

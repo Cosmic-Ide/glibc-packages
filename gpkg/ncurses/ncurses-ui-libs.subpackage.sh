@@ -1,9 +1,9 @@
 TERMUX_SUBPKG_INCLUDE="
-glibc/lib/libform*.so*
-glibc/lib/libmenu*.so*
-glibc/lib/libpanel*.so*
-glibc/lib/pkgconfig/form*.pc
-glibc/lib/pkgconfig/menu*.pc
-glibc/lib/pkgconfig/panel*.pc
+arch/lib/libform*.so*
+arch/lib/libmenu*.so*
+arch/lib/libpanel*.so*
+arch/lib/pkgconfig/form*.pc
+arch/lib/pkgconfig/menu*.pc
+arch/lib/pkgconfig/panel*.pc
 "
 TERMUX_SUBPKG_DESCRIPTION="Libraries for terminal user interfaces based on ncurses"

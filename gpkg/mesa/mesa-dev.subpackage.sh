@@ -3,7 +3,7 @@ TERMUX_SUBPKG_DEPEND_ON_PARENT="no"
 TERMUX_SUBPKG_DEPENDS="libglvnd-glibc"
 TERMUX_SUBPKG_PLATFORM_INDEPENDENT=true
 TERMUX_SUBPKG_INCLUDE="
-glibc/include/GL/!(osmesa.h)
-glibc/include/EGL/
-glibc/include/gbm.h
+arch/include/GL/!(osmesa.h)
+arch/include/EGL/
+arch/include/gbm.h
 "

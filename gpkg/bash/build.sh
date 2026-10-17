@@ -17,7 +17,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --without-bash-malloc
 --with-installed-readline
 "
-TERMUX_PKG_CONFFILES="glibc/etc/bash.bashrc glibc/etc/bash.bash_logout glibc/etc/profile"
+TERMUX_PKG_CONFFILES="arch/etc/bash.bashrc arch/etc/bash.bash_logout arch/etc/profile"
 
 termux_step_pre_configure() {
 	declare -A PATCH_CHECKSUMS

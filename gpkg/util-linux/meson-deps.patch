@@ -1,0 +1,32 @@
+--- a/libmount/meson.build
++++ b/libmount/meson.build
+@@ -91,7 +91,7 @@
+   link_with : [lib_common],
+   dependencies : [blkid_static_dep, realtime_libs],
+   install : false)
+-mount_static_dep = declare_dependency(link_with: lib_mount_static, include_directories: '.')
++mount_static_dep = declare_dependency(link_with: lib_mount_static, include_directories: '.', dependencies: blkid_static_dep)
+ 
+ lib__mount_deps = [
+   lib_selinux,
+@@ -114,7 +114,7 @@
+   link_with : [lib_common],
+   dependencies : lib__mount_deps + blkid_dep,
+   install : build_libmount)
+-mount_dep = declare_dependency(link_with: lib_mount, include_directories: '.')
++mount_dep = declare_dependency(link_with: lib_mount, include_directories: '.', dependencies: blkid_dep)
+ 
+ pkgconfig.generate(lib_mount,
+                     description : 'mount library',
+--- a/libfdisk/meson.build
++++ b/libfdisk/meson.build
+@@ -66,7 +66,7 @@
+                lib_uuid],
+   dependencies : [blkid_dep],
+   install : build_libfdisk)
+-fdisk_dep = declare_dependency(link_with: lib_fdisk, include_directories: '.')
++fdisk_dep = declare_dependency(link_with: lib_fdisk, include_directories: '.', dependencies: [blkid_dep, uuid_dep])
+ 
+ lib_fdisk_static = lib_fdisk.get_static_lib()
+ 
+

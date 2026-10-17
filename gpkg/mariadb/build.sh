@@ -44,12 +44,12 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DWITH_ZLIB=system
 "
 TERMUX_PKG_RM_AFTER_INSTALL="
-glibc/bin/mysqltest*
-glibc/share/man/man1/mysql-test-run.pl.1
-glibc/share/mysql/mysql-test
-glibc/mysql-test
-glibc/sql-bench
-glibc/mariadb-test
+arch/bin/mysqltest*
+arch/share/man/man1/mysql-test-run.pl.1
+arch/share/mysql/mysql-test
+arch/mysql-test
+arch/sql-bench
+arch/mariadb-test
 "
 
 termux_step_pre_configure() {

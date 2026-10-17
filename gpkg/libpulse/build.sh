@@ -9,8 +9,8 @@ TERMUX_PKG_REVISION=1
 #TERMUX_PKG_DEPENDS="libsndfile-glibc, libltdl-glibc, gdbm-glibc, libxcb-glibc, libxtst-glibc, libsm-glibc, libtool-glibc, libcap-glibc, dbus-glibc"
 TERMUX_PKG_DEPENDS="libsndfile-glibc, dbus-glibc, pulseaudio"
 TERMUX_PKG_BUILD_DEPENDS="gettext-glibc"
-#TERMUX_PKG_CONFFILES="glibc/etc/pulse/client.conf, glibc/etc/pulse/daemon.conf, glibc/etc/pulse/default.pa, glibc/etc/pulse/system.pa"
-TERMUX_PKG_CONFFILES="glibc/etc/pulse/client.conf"
+#TERMUX_PKG_CONFFILES="arch/etc/pulse/client.conf, arch/etc/pulse/daemon.conf, arch/etc/pulse/default.pa, arch/etc/pulse/system.pa"
+TERMUX_PKG_CONFFILES="arch/etc/pulse/client.conf"
 
 # TODO: learn android audio system
 

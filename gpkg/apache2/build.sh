@@ -8,21 +8,21 @@ TERMUX_PKG_SHA256=68c74d4df38c26bed4dfbdb8f3baf1eb532f3872357becc1bba5d136f6b63c
 TERMUX_PKG_DEPENDS="zlib-glibc, apr-util-glibc, pcre2-glibc, libnghttp2-glibc, openssl-glibc, libxcrypt-glibc"
 TERMUX_PKG_BUILD_DEPENDS="libcurl-glibc, libjansson-glibc, brotli-glibc, libdb-glibc"
 TERMUX_PKG_CONFFILES="
-glibc/etc/apache2/httpd.conf
-glibc/etc/apache2/extra/httpd-autoindex.conf
-glibc/etc/apache2/extra/httpd-dav.conf
-glibc/etc/apache2/extra/httpd-default.conf
-glibc/etc/apache2/extra/httpd-info.conf
-glibc/etc/apache2/extra/httpd-languages.conf
-glibc/etc/apache2/extra/httpd-manual.conf
-glibc/etc/apache2/extra/httpd-mpm.conf
-glibc/etc/apache2/extra/httpd-multilang-errordoc.conf
-glibc/etc/apache2/extra/httpd-ssl.conf
-glibc/etc/apache2/extra/httpd-userdir.conf
-glibc/etc/apache2/extra/httpd-vhosts.conf
-glibc/etc/apache2/extra/proxy-html.conf
-glibc/etc/apache2/mime.types
-glibc/etc/apache2/magic
+arch/etc/apache2/httpd.conf
+arch/etc/apache2/extra/httpd-autoindex.conf
+arch/etc/apache2/extra/httpd-dav.conf
+arch/etc/apache2/extra/httpd-default.conf
+arch/etc/apache2/extra/httpd-info.conf
+arch/etc/apache2/extra/httpd-languages.conf
+arch/etc/apache2/extra/httpd-manual.conf
+arch/etc/apache2/extra/httpd-mpm.conf
+arch/etc/apache2/extra/httpd-multilang-errordoc.conf
+arch/etc/apache2/extra/httpd-ssl.conf
+arch/etc/apache2/extra/httpd-userdir.conf
+arch/etc/apache2/extra/httpd-vhosts.conf
+arch/etc/apache2/extra/proxy-html.conf
+arch/etc/apache2/mime.types
+arch/etc/apache2/magic
 "
 
 # providing manual paths to libs because it picks up host libs on some systems

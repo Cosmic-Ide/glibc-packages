@@ -6,7 +6,7 @@ TERMUX_PKG_VERSION=3.6.3
 TERMUX_PKG_SRCURL=https://github.com/openssl/openssl/releases/download/openssl-${TERMUX_PKG_VERSION}/openssl-${TERMUX_PKG_VERSION}.tar.gz
 TERMUX_PKG_SHA256=243a86649cf6f23eeb6a2ff2456e09e5d77dd9018a54d3d96b0c6bdd6ba6c7f1
 TERMUX_PKG_DEPENDS="ca-certificates-glibc, resolv-conf, zlib-glibc, gcc-libs-glibc"
-TERMUX_PKG_CONFFILES="glibc/etc/ssl/openssl.cnf, glibc/etc/resolv.conf, glibc/etc/hosts"
+TERMUX_PKG_CONFFILES="arch/etc/ssl/openssl.cnf, arch/etc/resolv.conf, arch/etc/hosts"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_configure() {
@@ -25,17 +25,15 @@ termux_step_configure() {
 		optflags='no-sse2'
 	fi
 
-	./Configure --prefix=$TERMUX_PREFIX --openssldir=$TERMUX_PREFIX/etc/ssl --libdir=lib \
-		shared enable-ktls ${optflags} "${openssltarget}"
-}
-
-termux_step_make() {
-	make depend
-	make
+	./Configure "${openssltarget}" \
+		--prefix=$TERMUX_PREFIX \
+		--openssldir=$TERMUX_PREFIX/etc/ssl \
+		--libdir=lib \
+		shared enable-ktls ${optflags}
 }
 
 termux_step_make_install() {
 	make MANDIR=$TERMUX_PREFIX/share/man MANSUFFIX=ssl install_sw install_ssldirs install_man_docs
-	ln -s $TERMUX_PREFIX_CLASSICAL/etc/resolv.conf $TERMUX_PREFIX/etc
-	ln -s $TERMUX_PREFIX_CLASSICAL/etc/hosts $TERMUX_PREFIX/etc
+	ln -sf $TERMUX_PREFIX_CLASSICAL/etc/resolv.conf $TERMUX_PREFIX/etc
+	ln -sf $TERMUX_PREFIX_CLASSICAL/etc/hosts $TERMUX_PREFIX/etc
 }

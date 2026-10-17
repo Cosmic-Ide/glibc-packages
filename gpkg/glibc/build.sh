@@ -8,7 +8,7 @@ TERMUX_PKG_SHA256=37f600f2bef3c5e8300147059568b2a2e40a7ad6ccc65ce942556d49429cc6
 TERMUX_PKG_DEPENDS="linux-api-headers-glibc"
 TERMUX_PKG_RECOMMENDS="glibc-runner"
 TERMUX_PKG_NO_STATICSPLIT=true
-TERMUX_PKG_CONFFILES="glibc/etc/gai.conf, glibc/etc/locale.gen"
+TERMUX_PKG_CONFFILES="arch/etc/gai.conf, arch/etc/locale.gen"
 TERMUX_PKG_SEPARATE_SUB_DEPENDS=true
 TERMUX_PKG_BUILD_MULTILIB=true
 
@@ -172,7 +172,7 @@ termux_step_make_install() {
 		# then when installing glibc components in the usual way (`make install`),
 		# the glibc environment may break. Therefore, you need to install the libraries first,
 		# and then everything else.
-		local glibc_dir="${TERMUX_PKG_TMPDIR}/glibc/"
+		local glibc_dir="${TERMUX_PKG_TMPDIR}/arch/"
 		mkdir -p ${glibc_dir}
 		make DESTDIR=${glibc_dir} elf/ldso_install install-lib
 		cp -r ${TERMUX_PKG_BUILDDIR}/libc.so ${glibc_dir}/${TERMUX__PREFIX__LIB_DIR}/libc.so.6

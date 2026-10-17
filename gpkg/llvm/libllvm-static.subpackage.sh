@@ -1,5 +1,5 @@
 TERMUX_SUBPKG_INCLUDE="
-glibc/lib/*.a
+arch/lib/*.a
 "
 TERMUX_SUBPKG_DEPEND_ON_PARENT="no"
 TERMUX_SUBPKG_DEPENDS="libllvm-glibc"

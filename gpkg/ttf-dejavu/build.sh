@@ -9,12 +9,12 @@ TERMUX_PKG_PLATFORM_INDEPENDENT=true
 TERMUX_PKG_BUILD_IN_SRC=true
 
 TERMUX_PKG_CONFFILES="
-glibc/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf
-glibc/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf
-glibc/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf
-glibc/etc/fonts/conf.d/57-dejavu-sans-mono.conf
-glibc/etc/fonts/conf.d/57-dejavu-sans.conf
-glibc/etc/fonts/conf.d/57-dejavu-serif.conf
+arch/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf
+arch/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf
+arch/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf
+arch/etc/fonts/conf.d/57-dejavu-sans-mono.conf
+arch/etc/fonts/conf.d/57-dejavu-sans.conf
+arch/etc/fonts/conf.d/57-dejavu-serif.conf
 "
 
 termux_step_make_install() {

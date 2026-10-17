@@ -8,7 +8,7 @@ _PATCH_VERSION=3
 TERMUX_PKG_VERSION=$_MAIN_VERSION.$_PATCH_VERSION
 TERMUX_PKG_SRCURL=https://ftp.gnu.org/gnu/readline/readline-${_MAIN_VERSION}.tar.gz
 TERMUX_PKG_SHA256=fe5383204467828cd495ee8d1d3c037a7eba1389c22bc6a041f627976f9061cc
-TERMUX_PKG_CONFFILES="glibc/etc/inputrc"
+TERMUX_PKG_CONFFILES="arch/etc/inputrc"
 TERMUX_PKG_EXTRA_MAKE_ARGS="SHLIB_LIBS=-lncurses"
 
 termux_step_pre_configure() {

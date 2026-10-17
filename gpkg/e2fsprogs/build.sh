@@ -6,7 +6,7 @@ TERMUX_PKG_MAINTAINER="@termux-pacman"
 TERMUX_PKG_VERSION=1.47.4
 TERMUX_PKG_SRCURL=https://www.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v$TERMUX_PKG_VERSION/e2fsprogs-$TERMUX_PKG_VERSION.tar.xz
 TERMUX_PKG_SHA256=fd5bf388cbdbe006a3d3b318d983b2948382440acc85a87f1e7d108653e8db0b
-TERMUX_PKG_CONFFILES="glibc/etc/mke2fs.conf"
+TERMUX_PKG_CONFFILES="arch/etc/mke2fs.conf"
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_DEPENDS="libblkid-glibc, libuuid-glibc, bash-glibc"
 

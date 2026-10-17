@@ -1,11 +1,11 @@
---- src/glibc/elf/rtld.c	2024-07-21 19:33:37.000000000 +0300
-+++ src/glibc/elf/rtld.c.patch	2024-09-23 19:07:59.974864614 +0300
+--- src/arch/elf/rtld.c	2024-07-21 19:33:37.000000000 +0300
++++ src/arch/elf/rtld.c.patch	2024-09-23 19:07:59.974864614 +0300
 @@ -1862,7 +1862,7 @@
       open().  So we do this first.  If it succeeds we do almost twice
       the work but this does not matter, since it is not for production
       use.  */
 -  static const char preload_file[] = "/etc/ld.so.preload";
-+  static const char preload_file[] = "/data/data/com.termux/cgct/etc/ld.so.preload";
++  static const char preload_file[] = "/data/data/org.cosmicide/files/arch/usr/cgct/etc/ld.so.preload";
    if (__glibc_unlikely (__access (preload_file, R_OK) == 0))
      {
        /* Read the contents of the file.  */

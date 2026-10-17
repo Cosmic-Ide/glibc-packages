@@ -7,7 +7,7 @@ TERMUX_PKG_SRCURL=https://github.com/rhash/RHash/archive/v$TERMUX_PKG_VERSION.ta
 TERMUX_PKG_SHA256=9f6019cfeeae8ace7067ad22da4e4f857bb2cfa6c2deaa2258f55b2227ec937a
 TERMUX_PKG_DEPENDS="glibc"
 TERMUX_PKG_BUILD_IN_SRC=true
-TERMUX_PKG_CONFFILES="glibc/etc/rhashrc"
+TERMUX_PKG_CONFFILES="arch/etc/rhashrc"
 
 termux_step_post_make_install() {
 	make -C librhash install-lib-headers install-lib-shared install-so-link

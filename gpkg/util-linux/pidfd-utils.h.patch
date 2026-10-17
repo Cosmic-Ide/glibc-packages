@@ -1,36 +1,76 @@
 --- util-linux-2.42.1/include/pidfd-utils.h	2026-05-18 13:20:50.000000000 +0300
-+++ util-linux-2.42.1/include/pidfd-utils.h.patch	2026-08-08 03:19:24.209320770 +0300
-@@ -37,15 +37,6 @@
- # include <sys/syscall.h>
++++ util-linux-2.42.1/include/pidfd-utils.h.patch	2026-10-09 16:15:00.000000000 +0000
+@@ -38,27 +38,30 @@
  # include <unistd.h>
  
--# if !defined(HAVE_PIDFD_SEND_SIGNAL) && defined(SYS_pidfd_send_signal)
+ # if !defined(HAVE_PIDFD_SEND_SIGNAL) && defined(SYS_pidfd_send_signal)
 -static inline int pidfd_send_signal(int pidfd, int sig, siginfo_t *info,
--				    unsigned int flags)
--{
--	return syscall(SYS_pidfd_send_signal, pidfd, sig, info, flags);
--}
--#  define HAVE_PIDFD_SEND_SIGNAL 1
--# endif
--
- # if !defined(HAVE_PIDFD_OPEN) && defined(SYS_pidfd_open)
- static inline int pidfd_open(pid_t pid, unsigned int flags)
++static inline int ul_pidfd_send_signal(int pidfd, int sig, siginfo_t *info,
+ 				    unsigned int flags)
  {
-@@ -71,17 +62,6 @@
-  * Dummy fallbacks for cases when #ifdef HAVE_PIDFD_* makes the code too complex.
+ 	return syscall(SYS_pidfd_send_signal, pidfd, sig, info, flags);
+ }
++#  define pidfd_send_signal ul_pidfd_send_signal
+ #  define HAVE_PIDFD_SEND_SIGNAL 1
+ # endif
+ 
+ # if !defined(HAVE_PIDFD_OPEN) && defined(SYS_pidfd_open)
+-static inline int pidfd_open(pid_t pid, unsigned int flags)
++static inline int ul_pidfd_open(pid_t pid, unsigned int flags)
+ {
+ 	return syscall(SYS_pidfd_open, pid, flags);
+ }
++#  define pidfd_open ul_pidfd_open
+ #  define HAVE_PIDFD_OPEN 1
+ # endif
+ 
+ # if !defined(HAVE_PIDFD_GETFD) && defined(SYS_pidfd_getfd)
+-static inline int pidfd_getfd(int pidfd, int targetfd, unsigned int flags)
++static inline int ul_pidfd_getfd(int pidfd, int targetfd, unsigned int flags)
+ {
+ 	return syscall(SYS_pidfd_getfd, pidfd, targetfd, flags);
+ }
++#  define pidfd_getfd ul_pidfd_getfd
+ #  define HAVE_PIDFD_GETFD 1
+ # endif
+ #endif /* HAVE_SYS_SYSCALL_H */
+@@ -72,7 +75,7 @@
   */
  
--#if !defined(HAVE_PIDFD_SEND_SIGNAL) && !defined(SYS_pidfd_send_signal)
+ #if !defined(HAVE_PIDFD_SEND_SIGNAL) && !defined(SYS_pidfd_send_signal)
 -static inline int pidfd_send_signal(int pidfd __attribute__((unused)),
--				    int sig __attribute__((unused)),
--				    siginfo_t *info __attribute__((unused)),
--				    unsigned int flags __attribute__((unused)))
--{
--	errno = ENOSYS;
--	return -1;
--}
--#endif
--
++static inline int ul_pidfd_send_signal(int pidfd __attribute__((unused)),
+ 				    int sig __attribute__((unused)),
+ 				    siginfo_t *info __attribute__((unused)),
+ 				    unsigned int flags __attribute__((unused)))
+@@ -80,25 +83,28 @@
+ 	errno = ENOSYS;
+ 	return -1;
+ }
++# define pidfd_send_signal ul_pidfd_send_signal
+ #endif
+ 
  #if !defined(HAVE_PIDFD_OPEN) && !defined(SYS_pidfd_open)
- static inline int pidfd_open(pid_t pid __attribute__((unused)),
+-static inline int pidfd_open(pid_t pid __attribute__((unused)),
++static inline int ul_pidfd_open(pid_t pid __attribute__((unused)),
  			     unsigned int flags __attribute__((unused)))
+ {
+ 	errno = ENOSYS;
+ 	return -1;
+ }
++# define pidfd_open ul_pidfd_open
+ #endif
+ 
+ # if !defined(HAVE_PIDFD_GETFD) && !defined(SYS_pidfd_getfd)
+-static inline int pidfd_getfd(int pidfd __attribute__((unused)),
++static inline int ul_pidfd_getfd(int pidfd __attribute__((unused)),
+ 			      int targetfd __attribute__((unused)),
+ 			      unsigned int flags __attribute__((unused)))
+ {
+ 	errno = ENOSYS;
+ 	return -1;
+ }
++# define pidfd_getfd ul_pidfd_getfd
+ #endif
+ 
+ int pfd_is_pidfs(int pidfd);

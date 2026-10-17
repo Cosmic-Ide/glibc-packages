@@ -9,7 +9,7 @@ TERMUX_PKG_SHA256=0a585eeb9e363c0f80482ddb3571625250c2c86aeb408853e8ea50805cfb14
 TERMUX_PKG_DEPENDS="gdbm-glibc, libdb-glibc, glibc, libxcrypt-glibc"
 TERMUX_MAKE_PROCESSES=1
 TERMUX_PKG_BUILD_IN_SRC=true
-TERMUX_PKG_RM_AFTER_INSTALL="glibc/bin/perl${TERMUX_PKG_VERSION}"
+TERMUX_PKG_RM_AFTER_INSTALL="arch/bin/perl${TERMUX_PKG_VERSION}"
 
 termux_step_configure() {
 	./Configure \

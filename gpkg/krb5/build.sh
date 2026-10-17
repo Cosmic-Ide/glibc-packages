@@ -7,7 +7,7 @@ TERMUX_PKG_VERSION=1.22.2
 TERMUX_PKG_SRCURL=https://fossies.org/linux/misc/krb5-$TERMUX_PKG_VERSION.tar.gz
 TERMUX_PKG_SHA256=3243ffbc8ea4d4ac22ddc7dd2a1dc54c57874c40648b60ff97009763554eaf13
 TERMUX_PKG_DEPENDS="e2fsprogs-glibc, libverto-glibc"
-TERMUX_PKG_CONFFILES="glibc/etc/krb5.conf glibc/var/krb5kdc/kdc.conf"
+TERMUX_PKG_CONFFILES="arch/etc/krb5.conf arch/var/krb5kdc/kdc.conf"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --disable-static
 --sbindir=$TERMUX_PREFIX/bin

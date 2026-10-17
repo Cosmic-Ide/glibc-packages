@@ -8,6 +8,6 @@ TERMUX_PKG_SHA256=88bcf85124f77f74f2f2f8bcd16ac4382d807a827ede742a64940c7116aea3
 TERMUX_PKG_DEPENDS="bash-glibc"
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
 TERMUX_PKG_RM_AFTER_INSTALL="
-glibc/share/bash-completion/completions/makepkg
-glibc/share/bash-completion/completions/secret-tool
+arch/share/bash-completion/completions/makepkg
+arch/share/bash-completion/completions/secret-tool
 "

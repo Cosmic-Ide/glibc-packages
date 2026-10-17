@@ -9,7 +9,7 @@ TERMUX_PKG_DEPENDS="gcc-libs-glibc"
 TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 TERMUX_PKG_CMAKE_BUILD="Unix Makefiles"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBOX32=ON -DBOX32_BINFMT=ON -DBAD_SIGNAL=ON -DNOGIT=1"
-TERMUX_PKG_RM_AFTER_INSTALL="glibc/etc/binfmt.d"
+TERMUX_PKG_RM_AFTER_INSTALL="arch/etc/binfmt.d"
 
 termux_step_pre_configure() {
 	if [ "${TERMUX_ARCH}" = "aarch64" ]; then

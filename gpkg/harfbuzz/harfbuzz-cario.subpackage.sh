@@ -1,6 +1,6 @@
 TERMUX_SUBPKG_INCLUDE="
-glibc/lib/libharfbuzz-cairo*
-glibc/lib/pkgconfig/harfbuzz-cairo.pc
-glibc/include/harfbuzz/hb-cairo.h
+arch/lib/libharfbuzz-cairo*
+arch/lib/pkgconfig/harfbuzz-cairo.pc
+arch/include/harfbuzz/hb-cairo.h
 "
 TERMUX_SUBPKG_DESCRIPTION="OpenType text shaping engine Cairo backend"

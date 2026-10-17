@@ -11,11 +11,11 @@ TERMUX_PKG_NO_DEVELSPLIT=true
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
 
 TERMUX_PKG_RM_AFTER_INSTALL="
-glibc/include/X11/extensions/apple*
-glibc/include/X11/extensions/windows*
-glibc/include/X11/extensions/XKBgeom.h
-glibc/lib/pkgconfig/applewmproto.pc
-glibc/lib/pkgconfig/windowswmproto.pc
+arch/include/X11/extensions/apple*
+arch/include/X11/extensions/windows*
+arch/include/X11/extensions/XKBgeom.h
+arch/lib/pkgconfig/applewmproto.pc
+arch/lib/pkgconfig/windowswmproto.pc
 "
 
 termux_step_pre_configure() {
