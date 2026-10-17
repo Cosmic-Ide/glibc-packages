@@ -92,7 +92,7 @@ jobs:
             libbz2 libexpat liblz4 liblzma zstd libarchive libgpg-error
             libunistring libidn2 libssh2 libnghttp2 libseccomp libsqlite libgcrypt
             libcap-ng util-linux e2fsprogs libevent libverto krb5 brotli libpsl
-            libcurl
+            libcurl glibc
           )
           repo_dir="$GITHUB_WORKSPACE/repo/${{ matrix.target_arch }}"
           fallback_url="https://ftp.agdsn.de/termux-pacman/gpkg/${{ matrix.target_arch }}"
